@@ -1,0 +1,26 @@
+<h1>Draw Triangle</h1>
+<p>
+  Please input the text in the following format. <br/><br/>
+
+ <i>Draw a(n) "shape" with a(n) "measurement" of "amount" (and a(n) "measurement" of "amount")</i><br/><br/>
+
+  Here are some examples: <br/> <br/>
+
+  Draw an isosceles triangle with a height of 200 and a base of 100 <br/>
+
+  Draw an equilateral triangle with side of 400 <br /><br />
+
+</p>
+
+<form [formGroup]="triangleForm" (ngSubmit)="onSubmit()">  
+  <label>
+    Input text to draw Triangle
+    <input type="text" formControlName="inputText" size="100" required>
+  </label>
+
+  <button type="submit" [disabled]="!triangleForm.valid">Submit</button>
+</form>
+
+<span *ngIf="errors" style="color: red">{{errors}}</span>
+
+<canvas id="canvas" #triangleCanvas *ngIf="!errors"></canvas>

@@ -22,9 +22,9 @@ export class TriangleComponent implements OnInit {
     
   }
   drawTriangle(result) {
-    var AB = result.base;
-    var BC = result.side1;
-    var AC = result.side2;
+    var AB = Math.round(result.base);
+    var BC = Math.round(result.side1);
+    var AC = Math.round(result.side2);
 
     let ctx: CanvasRenderingContext2D = this.triangleCanvas.nativeElement.getContext("2d");
     ctx.clearRect(0, 0, this.triangleCanvas.nativeElement.width, this.triangleCanvas.nativeElement.height);
@@ -34,8 +34,8 @@ export class TriangleComponent implements OnInit {
     var C = [];
 
     // calculate third point
-    C[1] = ((AB * AB) + (AC * AC) - (BC * BC)) / (2 * AB);
-    C[0] = Math.sqrt(AC * AC - C[1] * C[1]);
+    C[0] = ((AB * AB) + (AC * AC) - (BC * BC)) / (2 * AB);
+    C[1] = Math.sqrt(AC * AC - C[0] * C[0]);
 
 
     ctx.beginPath();

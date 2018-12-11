@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace Rhipe.Tests
 {
     [TestFixture]
-    public class Tests
+    public class TriangleInputValidationTestScenarios
     {
         private IParse _parse;
         private string _validIsoscelesTriangleInput;
@@ -18,6 +18,7 @@ namespace Rhipe.Tests
         private string _invalidScaleneTriangleInput;
         private string _invalidEquilateralTriangleInput;
         private string _triangleInEqualityInput;
+        private string _invalidInput;
 
         [OneTimeSetUp]
         public void Setup()
@@ -30,7 +31,8 @@ namespace Rhipe.Tests
             _invalidScaleneTriangleInput = "Draw a Scalene Triangle with a side of 200 and a side of 300";
             _invalidEquilateralTriangleInput = "Draw an Equilateral Triangle with a side of 200 and side of 300";
             _triangleInEqualityInput =
-                "Draw a Scalene Triangle with a side of 200 and a side of 100 and a side of 250";
+                "Draw a Scalene Triangle with a base of 200 and a side of 100 and a side of 250";
+            _invalidInput = "Sample Test Data";
         }
 
         [Test]
@@ -125,6 +127,21 @@ namespace Rhipe.Tests
             try
             {
                 var expectedValue = _parse.ParseData(_triangleInEqualityInput);                
+
+            }
+            catch (Exception ex)
+            {
+                Assert.AreEqual(ex.Message, exception);
+            }
+        }
+
+        [Test]
+        public void InvalidInputDataShouldThrowInvalidInputException()
+        {
+            var exception = Exceptions.InvalidInputError;
+            try
+            {
+                var expectedValue = _parse.ParseData(_invalidInput);
 
             }
             catch (Exception ex)

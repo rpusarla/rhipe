@@ -1,120 +1,100 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Rhipe.Models;
 using Rhipe.Shared;
+using Rhipe.ViewModels;
 
 namespace Rhipe.Repository
-{
+{    
     public class Parse : IParse
     {
-        public Token BindTokens(string inputText)
+        private const string BaseOfConst = "BASE OF ";
+        private const string SideOfConst = "SIDE OF";
+        private const string HeightOfConst = "HEIGHT OF ";
+        private const string RegExPattern = @"(\S* (TRIANGLE))|(?:\S* \w+ \d+)";
+        
+
+        public Token ParseData(string inputText)
         {
             try
-            {
-                string pattern = @"(\S* (triangle))|(?:\S* \w+ \d+)";
-                var matches = Regex.Matches(inputText, pattern);
+            {                
+                var convertedInput = inputText.Trim().ToUpper();
+                var matches = Regex.Matches(convertedInput, RegExPattern);
 
-                Token tokens = new Token();
+                var objTokensViewModel = new TokenViewModel()
+                {
+                    TriangleName = matches.FirstOrDefault(match => match.Value.Contains("TRIANGLE"))?.Value,
+                    Base = StringToNumber(matches.First(match => match.Value.IndexOf(BaseOfConst, StringComparison.Ordinal) != -1).Value.Replace(BaseOfConst, "")),
+                    Side1 = StringToNumber(matches.First(match => match.Value.IndexOf(SideOfConst, StringComparison.Ordinal) != -1).Value.Replace(SideOfConst, "")),
+                    Side2 = StringToNumber(matches.Last(match => match.Value.IndexOf(SideOfConst, StringComparison.Ordinal) != -1).Value.Replace(SideOfConst, "")),
+                    Height = StringToNumber(matches.First(match => match.Value.IndexOf(HeightOfConst, StringComparison.Ordinal) != -1).Value.Replace(HeightOfConst, ""))
+                };
+                                
 
                 // Scalene Triangle
-                if (matches.Count(match => match.Value.ToUpper() == Constants.ScaleneTriangle) == 1 &&
-                    matches.Count(match => match.Value.IndexOf("base of ", StringComparison.OrdinalIgnoreCase) != -1) == 1 &&
-                    matches.Count(match => match.Value.IndexOf("height of ", StringComparison.OrdinalIgnoreCase) != -1) == 1 &&
-                    matches.Count == 3)
+                if (!(matches.Count(match => match.Value == Constants.ScaleneTriangle) == 1 &&
+                    matches.Count(match => match.Value.IndexOf(BaseOfConst, StringComparison.Ordinal) != -1) == 1 &&
+                    matches.Count(match => match.Value.IndexOf(SideOfConst, StringComparison.Ordinal) != -1) == 2 &&
+                    matches.Count == 4 && objTokensViewModel.Base > 0 && objTokensViewModel.Side1 > 0 && objTokensViewModel.Side2 > 0))
                 {
-                    tokens.TriangleName = Constants.ScaleneTriangle;
-                    tokens.Base = StringToNumber(matches.First(match => match.Value.IndexOf("base of ", StringComparison.OrdinalIgnoreCase) != -1).Value.Replace("base of ", ""));
-                    tokens.Height = StringToNumber(matches.Last(match => match.Value.IndexOf("height of ", StringComparison.OrdinalIgnoreCase) != -1).Value.Replace("height of ", ""));
-                }
+                    throw new Exception(Exceptions.ScaleneTriangleError);
+                }                
 
                 // Isosceles Triangle
-                if (matches.Count(match => match.Value.ToUpper() == Constants.IsoscelesTriangle) == 1 &&
-                    matches.Count(match => match.Value.IndexOf("base of ", StringComparison.OrdinalIgnoreCase) != -1) == 1 &&
-                    matches.Count(match => match.Value.IndexOf("height of ", StringComparison.OrdinalIgnoreCase) != -1) == 1 &&
-                    matches.Count == 3)
+                if (matches.Count(match => match.Value == Constants.IsoscelesTriangle) == 1 &&
+                    matches.Count(match => match.Value.IndexOf(BaseOfConst, StringComparison.Ordinal) != -1) == 1 &&
+                    matches.Count(match => match.Value.IndexOf(HeightOfConst, StringComparison.Ordinal) != -1) == 1 &&
+                    matches.Count == 3 && objTokensViewModel.Base > 0 && objTokensViewModel.Height > 0)
                 {
-                    tokens.TriangleName = Constants.IsoscelesTriangle;
-                    tokens.Base = StringToNumber(matches.First(match => match.Value.IndexOf("base of ", StringComparison.OrdinalIgnoreCase) != -1).Value.Replace("base of ", ""));
-                    tokens.Height = StringToNumber(matches.Last(match => match.Value.IndexOf("height of ", StringComparison.OrdinalIgnoreCase) != -1).Value.Replace("height of ", ""));
+                    objTokensViewModel.Side1 = objTokensViewModel.Side2 = Math.Sqrt((objTokensViewModel.Base * objTokensViewModel.Base) + (4 * objTokensViewModel.Height * objTokensViewModel.Height));
                 }
+                else throw new Exception(Exceptions.ScaleneTriangleError);
 
                 // Equilateral Triangle
-                if (matches.Count(match => match.Value.ToUpper() == Constants.EquilateralTriangle) == 1 &&
-                    matches.Count(match => match.Value.IndexOf("side of ", StringComparison.OrdinalIgnoreCase) != -1) == 1 &&
-                    matches.Count == 2)
+                if (matches.Count(match => match.Value == Constants.EquilateralTriangle) == 1 &&
+                    matches.Count(match => match.Value.IndexOf(SideOfConst, StringComparison.Ordinal) != -1) == 1 &&
+                    matches.Count == 2 && objTokensViewModel.Side1 > 0)
                 {
-                    tokens.TriangleName = Constants.EquilateralTriangle;
-                    tokens.Base = tokens.Side1 = tokens.Side2 = StringToNumber(matches.First(match => match.Value.IndexOf("side of ", StringComparison.OrdinalIgnoreCase) != -1).Value.Replace("side of ", ""));
+                    objTokensViewModel.Base = objTokensViewModel.Side2 = objTokensViewModel.Side1;
                 }
+                else throw new Exception(Exceptions.EquilateralTriangleError);
 
-                return tokens;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
+                // Check if the triangle name is valid.
+                if (objTokensViewModel.TriangleName == null ||
+                    (objTokensViewModel.TriangleName != Constants.IsoscelesTriangle &&
+                     objTokensViewModel.TriangleName != Constants.ScaleneTriangle &&
+                     objTokensViewModel.TriangleName != Constants.EquilateralTriangle))
+                    throw new Exception(Exceptions.InvalidInputError);
 
-        private double StringToNumber(string inputText) => double.TryParse(inputText, out double result) && result > 0 ? result : -1;        
-
-        public Token ValidateTokens(Token tokens)
-        {
-            try
-            {
-                if (tokens.TriangleName == null)
-                {
-                    throw new Exception("Invalid input provided. Provide input under Draw a(n) <shape> with a(n) <measurement> of <amount> (and a(n) <measurement> of <amount>)");
-                }
-
-                if (tokens.TriangleName == Constants.ScaleneTriangle && (tokens.Side1 == -1 || tokens.Side2 == -1))
-                {
-                    throw new Exception("Invalid Measurement for Scalene Triangle. Two sides must be specified for Scalene Triangle and both of them must be positive numbers.");
-                }
-
-                if (tokens.TriangleName == Constants.IsoscelesTriangle && (tokens.Side1 == -1 || tokens.Height == -1))
-                {
-                    throw new Exception("Invalid Measurement for Isosceles Triangle. One height and One side must be specified for Isosceles Triangle and both of them must be positive numbers.");
-                }
-
-                if (tokens.TriangleName == Constants.EquilateralTriangle && tokens.Side1 == -1)
-                {
-                    throw new Exception("Invalid Measurement for Equilateral Triangle. Only one side must be provided for Equilateral Triangle and it must a positive number.");
-                }
 
                 // Check for Triangle inequalities
                 // Side1 + Base > Side2
                 // Base + Side2 > Side1
                 // Side1 + Side2 > Base
 
-                if ((tokens.Side1 + tokens.Base <= tokens.Side2) ||
-                    (tokens.Base + tokens.Side2 <= tokens.Side1) ||
-                    (tokens.Side1 + tokens.Side2 <= tokens.Base))
+                if ((objTokensViewModel.Side1 + objTokensViewModel.Base <= objTokensViewModel.Side2) ||
+                    (objTokensViewModel.Base + objTokensViewModel.Side2 <= objTokensViewModel.Side1) ||
+                    (objTokensViewModel.Side1 + objTokensViewModel.Side2 <= objTokensViewModel.Base))
+                   throw new Exception(Exceptions.TriangleInequalityError);
+
+                return new Token()
                 {
-                    throw new Exception("Triangle Inequalities issue. The sum of the lengths of any two sides must be greater than the length of the third side.");
-                }
-
-
-                if (tokens.TriangleName == Constants.IsoscelesTriangle)
-                {
-                    tokens.Side1 = tokens.Side2 = Math.Sqrt((tokens.Base * tokens.Base) + (4 * tokens.Height * tokens.Height));
-                }
-
-                if (tokens.TriangleName == Constants.ScaleneTriangle)
-                {
-                    tokens.Side1 = (tokens.Height * tokens.Base) / 2;
-                    tokens.Side2 = Math.Sqrt((tokens.Base * tokens.Base) + (tokens.Side1 * tokens.Side1));
-                }
-
-
-                return tokens;
+                    TriangleName = objTokensViewModel.TriangleName,
+                    Base = objTokensViewModel.Base,
+                    Side1 = objTokensViewModel.Side1,
+                    Side2 = objTokensViewModel.Side2
+                };
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
+        private double StringToNumber(string inputText) => double.TryParse(inputText, out double result) ? result : 0;                   
     }
 }

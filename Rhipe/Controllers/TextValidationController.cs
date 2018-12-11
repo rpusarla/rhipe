@@ -26,9 +26,9 @@ namespace Rhipe.Controllers
         {
             try
             {                
-                var tokens = _parse.BindTokens(inputText);
+                var tokens = _parse.ParseData(inputText);
 
-                return Ok(_parse.ValidateTokens(tokens));
+                return Ok(tokens);
             }
             catch(Exception ex)
             {

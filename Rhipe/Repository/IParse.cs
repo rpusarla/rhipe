@@ -9,7 +9,6 @@ namespace Rhipe.Repository
 {
     public interface IParse
     {
-        Token BindTokens(string inputText);
-        Token ValidateTokens(Token tokens);        
+        Token ParseData(string inputText);        
     }
 }

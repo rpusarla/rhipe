@@ -30,7 +30,7 @@ export class TriangleComponent implements OnInit {
     ctx.clearRect(0, 0, this.triangleCanvas.nativeElement.width, this.triangleCanvas.nativeElement.height);
 
     var A = [0, 0]; // starting coordinates
-    var B = [0, AB];
+    var B = [AB, 0];
     var C = [];
 
     // calculate third point

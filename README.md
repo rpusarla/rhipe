@@ -13,7 +13,8 @@ Below is the folder structure that's been followed for better maintainability of
 
 Business Rule Validations - 
 
-	As per the requirement, validation the input text looking for keywords such as, ISOSCELES/SCALENE/EQUILATERAL triangle, 
-	base, height and side measurements.
-	Checking the Triangle Inequality rule to decide up on whether a triangle can be drawn based on the given user dimensions.
+	As per the requirement, validation the input text looking for keywords such as, 
+	ISOSCELES/SCALENE/EQUILATERAL triangle, base, height and side measurements.
+	Checking the Triangle Inequality rule to decide up on whether a triangle can be drawn based on the 
+	given user dimensions.
 	Throw exception messages whereever required.
